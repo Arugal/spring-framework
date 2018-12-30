@@ -136,6 +136,8 @@ public class HandlerExecutionChain {
 	 * that this interceptor has already dealt with the response itself.
 	 *
 	 * 应用拦截器的前置处理
+	 *
+	 * 前置拦截器返回 false 时，拦截请求
 	 */
 	boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HandlerInterceptor[] interceptors = getInterceptors();
@@ -177,6 +179,7 @@ public class HandlerExecutionChain {
 
 		HandlerInterceptor[] interceptors = getInterceptors();
 		if (!ObjectUtils.isEmpty(interceptors)) {
+			// 倒序， interceptorIndex 在 applyPreHandle 中累计
 			for (int i = this.interceptorIndex; i >= 0; i--) {
 				HandlerInterceptor interceptor = interceptors[i];
 				try {

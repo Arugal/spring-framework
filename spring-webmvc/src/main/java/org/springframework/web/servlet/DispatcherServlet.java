@@ -1048,7 +1048,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 				// 前置处理，拦截请求 触发 HandlerInterceptor.preHandler 方法
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
-					return;
+					return; // 请求被拦截器拦截
 				}
 
 				// Actually invoke the handler.

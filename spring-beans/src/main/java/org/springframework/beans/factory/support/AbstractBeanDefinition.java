@@ -1087,6 +1087,12 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * marking it as not overloaded if none found.
 	 * @param mo the MethodOverride object to validate
 	 * @throws BeanDefinitionValidationException in case of validation failure
+	 *
+	 * 如果 count 为 0, 则抛出 BeanDefintionValidationException 异常
+	 * 如果 count 为 1, 则设置该方法没有被重载
+	 *
+	 * 如果一个类存在多个重载方法，则在方法调用的时候还需要根据参数类型来判断到底重载的哪个方法，在设置重载的时候其实这里做了一个小小的优化
+	 * 那就是当 count = 1 时，设置 overloadaed = false, 这样表示改方法没有重载，这样，在后续调用的时候，便可以直接找到方法而不需要进行方法参数的校验
 	 */
 	protected void prepareMethodOverride(MethodOverride mo) throws BeanDefinitionValidationException {
 		int count = ClassUtils.getMethodCountForName(getBeanClass(), mo.getMethodName());

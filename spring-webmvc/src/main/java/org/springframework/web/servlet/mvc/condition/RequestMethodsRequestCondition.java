@@ -110,9 +110,11 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 
 				return null; // No implicit match for OPTIONS (we handle it)
 			}
+			// 为空的情况直接返回自身
 			return this;
 		}
 
+		// 逐个匹配
 		return matchRequestMethod(request.getMethod());
 	}
 

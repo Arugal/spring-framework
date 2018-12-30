@@ -53,13 +53,19 @@ import org.springframework.web.servlet.HandlerExecutionChain;
  */
 public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping implements MatchableHandlerMapping {
 
+	// 跟路径的处理器
 	@Nullable
 	private Object rootHandler;
 
+	// 使用后置的 / 匹配
 	private boolean useTrailingSlashMatch = false;
 
+	// 是否延迟加载 Handler
 	private boolean lazyInitHandlers = false;
 
+	/**
+	 *  key:路径 {@link #lookupHandler(String, HttpServletRequest)}
+	 */
 	private final Map<String, Object> handlerMap = new LinkedHashMap<>();
 
 

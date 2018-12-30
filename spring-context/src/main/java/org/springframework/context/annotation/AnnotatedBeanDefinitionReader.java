@@ -213,36 +213,57 @@ public class AnnotatedBeanDefinitionReader {
 	<T> void doRegisterBean(Class<T> annotatedClass, @Nullable Supplier<T> instanceSupplier, @Nullable String name,
 			@Nullable Class<? extends Annotation>[] qualifiers, BeanDefinitionCustomizer... definitionCustomizers) {
 
+		// 将 Bean 配置类信息转化成容器中 AnnotatedGenericBeanDefinition 数据结构，
+		// AnnotatedGenericBeanDefinition 继承自 BeanDefinition，作用是定义一个 Bean 的数组结构，
+		// 下面 getMetadata 可以获取到该 bean 上的注解信息
 		AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(annotatedClass);
+		// 判断 @Condition 的装配判断条件是否需要跳过注册
 		if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
 			return;
 		}
 
+		// 设置回调
 		abd.setInstanceSupplier(instanceSupplier);
+		// 解析 Bean 的作用域（单例或者原型），如果有 @Scope 注解，则解析 @Scope，没有则默认 singleton
 		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+		// 作用域写回 BeanDefinition 数据结构，abd 中缺损的情况下为空，将默认值 singleton 重新复制到 abd
 		abd.setScope(scopeMetadata.getScopeName());
+		// 生成 bean 配置的 beanName
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
 
+		// 通过注解解析到 abd 结果中，主要是处理 Lazy、primary、DependsOn、Role、Description 五个注解
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
-		if (qualifiers != null) {
+		if (qualifiers != null) { // @Qualifier 特殊限定符处理
 			for (Class<? extends Annotation> qualifier : qualifiers) {
 				if (Primary.class == qualifier) {
+					// 如果配置了 @Primary 注解，则设置当前 Bean 为自动装配 @Autowire 时首选 bean
 					abd.setPrimary(true);
 				}
 				else if (Lazy.class == qualifier) {
+					// 设置当前 bean 为延迟加载
 					abd.setLazyInit(true);
 				}
 				else {
+					// 其他注解
 					abd.addQualifier(new AutowireCandidateQualifier(qualifier));
 				}
 			}
 		}
+		// 自定义 bean 注册，通常用在 applicationContext 创建后，手动向容器中(lambda)表达式的方式注册 bean
+		// 比如: applicationContext.registerBean(UserService.clss, () -> new UserService());
 		for (BeanDefinitionCustomizer customizer : definitionCustomizers) {
 			customizer.customize(abd);
 		}
 
+		// 根据 beanName 和 bean 定义信息封装一个 beanhold,beanhold其实就是一个 beanName 和 BeanDefinition 的映射
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+		// 创建代理对象
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		/**
+		 * {@link BeanDefinitionReaderUtils#registerBeanDefinition(BeanDefinitionHolder, BeanDefinitionRegistry)} 内部通过 {@link org.springframework.beans.factory.support.DefaultListableBeanFactory#registerBeanDefinition(String, BeanDefinition)}
+		 * 按名称将 bean 定义信息注册到容器中
+		 * 实际上 {@link org.springframework.beans.factory.support.DefaultListableBeanFactory#beanDefinitionMap} 用于保存 bean 定义信息
+		 */
 		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
 	}
 

@@ -60,28 +60,42 @@ public class HandlerMethod {
 	/** Logger that is available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
+
+	// Bean 对象
 	private final Object bean;
 
 	@Nullable
 	private final BeanFactory beanFactory;
 
+	// Bean 类型
 	private final Class<?> beanType;
 
+	// 方法
 	private final Method method;
 
+	// 桥接方法
+	// https://www.jianshu.com/p/250030ea9b28
 	private final Method bridgedMethod;
 
 	private final MethodParameter[] parameters;
 
+	/**
+	 * 响应的状态码 {@link ResponseStatus#reason()}
+	 */
 	@Nullable
 	private HttpStatus responseStatus;
 
 	@Nullable
 	private String responseStatusReason;
 
+	/**
+	 * 解析自哪个 HandlerMethod 对象
+	 * 仅构造方法中传入 HandlerMethod 类型的参数适用 {@link #HandlerMethod(HandlerMethod)}
+	 */
 	@Nullable
 	private HandlerMethod resolvedFromHandlerMethod;
 
+	// 父接口的方法参数注解数组
 	@Nullable
 	private volatile List<Annotation[][]> interfaceParameterAnnotations;
 

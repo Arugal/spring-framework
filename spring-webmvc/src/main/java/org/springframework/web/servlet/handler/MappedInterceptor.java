@@ -41,17 +41,23 @@ import org.springframework.web.servlet.ModelAndView;
  * @author Rossen Stoyanchev
  * @author Brian Clozel
  * @since 3.0
+ *
+ * MappedInterceptor 是一个装饰类，让一个 Interceptor 具有路径匹配的功能
  */
 public final class MappedInterceptor implements HandlerInterceptor {
 
+	// 匹配的路径
 	@Nullable
 	private final String[] includePatterns;
 
+	// 不匹配的路径
 	@Nullable
 	private final String[] excludePatterns;
 
+	// 被装饰的拦截器
 	private final HandlerInterceptor interceptor;
 
+	// 路径匹配起
 	@Nullable
 	private PathMatcher pathMatcher;
 
@@ -142,6 +148,8 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * @param lookupPath the current request path
 	 * @param pathMatcher a path matcher for path pattern matching
 	 * @return {@code true} if the interceptor applies to the given request path
+	 *
+	 * 没设置 includePattern 时,默认命中
 	 */
 	public boolean matches(String lookupPath, PathMatcher pathMatcher) {
 		PathMatcher pathMatcherToUse = (this.pathMatcher != null ? this.pathMatcher : pathMatcher);

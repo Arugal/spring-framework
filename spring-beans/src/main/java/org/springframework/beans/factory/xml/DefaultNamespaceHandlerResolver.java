@@ -132,8 +132,10 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 							"] does not implement the [" + NamespaceHandler.class.getName() + "] interface");
 				}
 				NamespaceHandler namespaceHandler = (NamespaceHandler) BeanUtils.instantiateClass(handlerClass);
+				// 调用 NamespaceHandler.init 方法
 				namespaceHandler.init();
-				handlerMappings.put(namespaceUri, namespaceHandler);
+				// 保存实例化后的 NamespaceHandler 对象
+				handlerMappings.put(namespaceUri, namespaceHandler); // ConcurrentHashMap
 				return namespaceHandler;
 			}
 			catch (ClassNotFoundException ex) {
@@ -153,7 +155,7 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	private Map<String, Object> getHandlerMappings() {
 		Map<String, Object> handlerMappings = this.handlerMappings;
 		if (handlerMappings == null) {
-			synchronized (this) {
+			synchronized (this) { // 双重锁定
 				handlerMappings = this.handlerMappings;
 				if (handlerMappings == null) {
 					if (logger.isTraceEnabled()) {
