@@ -16,6 +16,7 @@
 
 package org.springframework.transaction.interceptor;
 
+import org.springframework.aop.Advisor;
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor;
@@ -64,6 +65,10 @@ public class BeanFactoryTransactionAttributeSourceAdvisor extends AbstractBeanFa
 		this.pointcut.setClassFilter(classFilter);
 	}
 
+	/**
+	 * {@link org.springframework.aop.support.AopUtils#canApply(Advisor, Class, boolean)} 被调用
+	 * @return
+	 */
 	@Override
 	public Pointcut getPointcut() {
 		return this.pointcut;

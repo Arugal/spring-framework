@@ -36,6 +36,8 @@ import org.springframework.lang.Nullable;
  * {@link org.springframework.jdbc.datasource.DataSourceTransactionManager},
  * which can serve as an implementation guide for other transaction strategies.
  *
+ * 事务管理器
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @since 16.05.2003
@@ -46,6 +48,7 @@ import org.springframework.lang.Nullable;
 public interface PlatformTransactionManager {
 
 	/**
+	 * 启动一个新事务
 	 * Return a currently active transaction or create a new one, according to
 	 * the specified propagation behavior.
 	 * <p>Note that parameters like isolation level or timeout will only be applied
@@ -71,6 +74,7 @@ public interface PlatformTransactionManager {
 	TransactionStatus getTransaction(@Nullable TransactionDefinition definition) throws TransactionException;
 
 	/**
+	 * 提交事务
 	 * Commit the given transaction, with regard to its status. If the transaction
 	 * has been marked rollback-only programmatically, perform a rollback.
 	 * <p>If the transaction wasn't a new one, omit the commit for proper
@@ -100,6 +104,7 @@ public interface PlatformTransactionManager {
 	void commit(TransactionStatus status) throws TransactionException;
 
 	/**
+	 * 回滚事务
 	 * Perform a rollback of the given transaction.
 	 * <p>If the transaction wasn't a new one, just set it rollback-only for proper
 	 * participation in the surrounding transaction. If a previous transaction

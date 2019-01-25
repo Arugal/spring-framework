@@ -90,6 +90,8 @@ import org.springframework.util.Assert;
  * @see #refresh()
  * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
  * @see org.springframework.beans.factory.support.PropertiesBeanDefinitionReader
+ *
+ * 在 GenericApplicationContext 中初始化 BeanFactory 实例为 DefaultListableBeanFactory
  */
 public class GenericApplicationContext extends AbstractApplicationContext implements BeanDefinitionRegistry {
 

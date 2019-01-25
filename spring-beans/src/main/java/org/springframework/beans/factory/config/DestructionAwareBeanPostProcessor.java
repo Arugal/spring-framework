@@ -24,6 +24,8 @@ import org.springframework.beans.BeansException;
  * <p>The typical usage will be to invoke custom destruction callbacks on
  * specific bean types, matching corresponding initialization callbacks.
  *
+ * Destruction:破坏，毁灭；摧毁
+ *
  * @author Juergen Hoeller
  * @since 1.0.1
  */

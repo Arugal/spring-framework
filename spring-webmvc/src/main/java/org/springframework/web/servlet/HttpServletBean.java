@@ -71,6 +71,8 @@ import org.springframework.web.context.support.StandardServletEnvironment;
  * class which loads its own application context. FrameworkServlet serves
  * as direct base class of Spring's full-fledged {@link DispatcherServlet}.
  *
+ * 	负责将 ServletConfig 设置到但前 Servlet 对象中
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see #addRequiredProperty

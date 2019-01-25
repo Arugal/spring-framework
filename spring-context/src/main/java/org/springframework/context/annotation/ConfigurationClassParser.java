@@ -98,6 +98,7 @@ import org.springframework.util.StringUtils;
  * <p>This ASM-based implementation avoids reflection and eager class loading in order to
  * interoperate effectively with lazy class loading in a Spring ApplicationContext.
  *
+ * 分析 @Configuration 配置的类
  * @author Chris Beams
  * @author Juergen Hoeller
  * @author Phillip Webb
@@ -160,13 +161,19 @@ class ConfigurationClassParser {
 		this.conditionEvaluator = new ConditionEvaluator(registry, environment, resourceLoader);
 	}
 
-
+	/**
+	 *
+	 * @param configCandidates 外部指定需要分析的一组候选配置类
+	 */
 	public void parse(Set<BeanDefinitionHolder> configCandidates) {
 		this.deferredImportSelectors = new LinkedList<>();
 
 		for (BeanDefinitionHolder holder : configCandidates) {
 			BeanDefinition bd = holder.getBeanDefinition();
 			try {
+				/**
+				 * 根据 bean 定义的区别走不同的分支，最终都会调用 {@link #processConfigurationClass(ConfigurationClass)}
+				 */
 				if (bd instanceof AnnotatedBeanDefinition) {
 					parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName());
 				}
@@ -186,6 +193,15 @@ class ConfigurationClassParser {
 			}
 		}
 
+		/**
+		 * 执行找到的 DeferredImportSelector
+		 *
+		 * {@link DeferredImportSelector} 是 {@link ImportSelector} 的一个变种
+		 *
+		 * ImportSelector 被设计成和 {@link Import} 同样的导入效果,但是实现 ImportSelector 的类可以条件性的决定导入哪些 bean
+		 *
+		 * DeferredImportSelector 的设计目的是在所有其他的配置类处理后才处理，
+		 */
 		processDeferredImportSelectors();
 	}
 
@@ -218,6 +234,11 @@ class ConfigurationClassParser {
 	}
 
 
+	/**
+	 * 用于分析一个 ConfigurationClass，分析之后将它记录到已处理配置类
+	 * @param configClass
+	 * @throws IOException
+	 */
 	protected void processConfigurationClass(ConfigurationClass configClass) throws IOException {
 		if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
 			return;
@@ -227,6 +248,9 @@ class ConfigurationClassParser {
 		if (existingClass != null) {
 			if (configClass.isImported()) {
 				if (existingClass.isImported()) {
+					/**
+					 * 如果要处理的配置类 configurationClass 在以分析记录中存在，则合并二者的 ImportedBy 属性
+					 */
 					existingClass.mergeImportedBy(configClass);
 				}
 				// Otherwise ignore new imported config class; existing non-imported class overrides it.
@@ -243,14 +267,28 @@ class ConfigurationClassParser {
 		// Recursively process the configuration class and its superclass hierarchy.
 		SourceClass sourceClass = asSourceClass(configClass);
 		do {
+			/**
+			 * 循环处理配置类 ConfigurationCLass 直到 sourceCLass 变为 null
+			 * doProcessConfigurationClass 的返回值是其参数 configClass 的父类
+			 * 如果该父类是由 Java 提供的类或者已经处理，则返回 Null
+			 */
 			sourceClass = doProcessConfigurationClass(configClass, sourceClass);
 		}
 		while (sourceClass != null);
 
+		// 已处理
 		this.configurationClasses.put(configClass, configClass);
 	}
 
 	/**
+	 * 1. 一个配置类的成员类（配置类内嵌套定义的类）可可能是适配类，先遍历这些成员配置类
+	 * 2. 处理 {@link org.springframework.context.annotation.PropertySource} {@link PropertySources}
+	 * 3. 处理 {@link ComponentScans} {@link ComponentScan}
+	 * 4. 处理 {@link Import}
+	 * 5. 处理 {@link ImportResource}
+	 * 6. 处理配置类中每个带有 {@link Bean} 注解的方法
+	 * 7. 处理配置类所实现接口的缺省方法
+	 * 8. 检查父类是否需要处理，如果父类需要处理返回父类，否则返回 null
 	 * Apply processing and build a complete {@link ConfigurationClass} by reading the
 	 * annotations, members and methods from the source class. This method can be called
 	 * multiple times as relevant sources are discovered.
@@ -295,6 +333,7 @@ class ConfigurationClassParser {
 					if (bdCand == null) {
 						bdCand = holder.getBeanDefinition();
 					}
+					// 如果 Bean 定义是个配置类，则进行解析
 					if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
 						parse(bdCand.getBeanClassName(), holder.getBeanName());
 					}
@@ -302,6 +341,9 @@ class ConfigurationClassParser {
 			}
 		}
 
+		/**
+		 * 注意这里调用了 {@link #getImports(SourceClass)} 方法，它会搜集 sourceClass 上所有的 Import 注解的 value 值
+		 */
 		// Process any @Import annotations
 		processImports(configClass, sourceClass, getImports(sourceClass), true);
 
@@ -323,7 +365,7 @@ class ConfigurationClassParser {
 			configClass.addBeanMethod(new BeanMethod(methodMetadata, configClass));
 		}
 
-		// Process default methods on interfaces
+		// Process default methods on interfaces 处理接口上的缺省方法
 		processInterfaces(configClass, sourceClass);
 
 		// Process superclass, if any
@@ -591,6 +633,13 @@ class ConfigurationClassParser {
 		return group;
 	}
 
+	/**
+	 * 处理 {@link Import}
+	 * @param configClass
+	 * @param currentSourceClass
+	 * @param importCandidates
+	 * @param checkForCircularImports
+	 */
 	private void processImports(ConfigurationClass configClass, SourceClass currentSourceClass,
 			Collection<SourceClass> importCandidates, boolean checkForCircularImports) {
 
@@ -599,13 +648,14 @@ class ConfigurationClassParser {
 		}
 
 		if (checkForCircularImports && isChainedImportOnStack(configClass)) {
+			// 循环导入检查
 			this.problemReporter.error(new CircularImportProblem(configClass, this.importStack));
 		}
 		else {
 			this.importStack.push(configClass);
 			try {
 				for (SourceClass candidate : importCandidates) {
-					if (candidate.isAssignable(ImportSelector.class)) {
+					if (candidate.isAssignable(ImportSelector.class)) { /** {@link ImportSelector} **/
 						// Candidate class is an ImportSelector -> delegate to it to determine imports
 						Class<?> candidateClass = candidate.loadClass();
 						ImportSelector selector = BeanUtils.instantiateClass(candidateClass, ImportSelector.class);
@@ -616,12 +666,15 @@ class ConfigurationClassParser {
 									new DeferredImportSelectorHolder(configClass, (DeferredImportSelector) selector));
 						}
 						else {
+							/**
+							 * {@link ImportSelector#selectImports(AnnotationMetadata)}
+							 */
 							String[] importClassNames = selector.selectImports(currentSourceClass.getMetadata());
 							Collection<SourceClass> importSourceClasses = asSourceClasses(importClassNames);
 							processImports(configClass, currentSourceClass, importSourceClasses, false);
 						}
 					}
-					else if (candidate.isAssignable(ImportBeanDefinitionRegistrar.class)) {
+					else if (candidate.isAssignable(ImportBeanDefinitionRegistrar.class)) { /** {@link ImportBeanDefinitionRegistrar} **/
 						// Candidate class is an ImportBeanDefinitionRegistrar ->
 						// delegate to it to register additional bean definitions
 						Class<?> candidateClass = candidate.loadClass();

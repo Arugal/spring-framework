@@ -212,7 +212,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	/** Statically specified listeners. */
 	private final Set<ApplicationListener<?>> applicationListeners = new LinkedHashSet<>();
 
-	/** ApplicationEvents published early. */
+	/** ApplicationEvents published early. 保存容器一些早期的事件 */
 	@Nullable
 	private Set<ApplicationEvent> earlyApplicationEvents;
 
@@ -518,7 +518,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
-			// 获取刷新后的 Bean 工厂
+			// 获取刷新后的 Bean 工厂, 初始化 BeanFactory
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
@@ -551,7 +551,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				onRefresh();
 
 				// Check for listener beans and register them.
-				// 注册时间监听器，将所有项目里面的 ApplicationListenr 注册到容器红来
+				// 注册事件监听器,将容器中的 ApplicationLinstener 注册到 ApplicationEventMulticaster 中,并触发 earlyApplicationEvents 事件
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
@@ -681,8 +681,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found.
-		// 设置编译时的 AspectJ
-		if (beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
+		if (beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) { // 处理 LoadTimeWeaverAware
 			beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
 			// Set a temporary ClassLoader for type matching.
 			beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
@@ -888,7 +887,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Allow for caching all bean definition metadata, not expecting further changes.
 		beanFactory.freezeConfiguration();
 
-		// Instantiate all remaining (non-lazy-init) singletons.
+		// Instantiate all remaining (non-lazy-init) singletons. 实例化所有非延迟加载的单实例 bean
 		beanFactory.preInstantiateSingletons();
 	}
 

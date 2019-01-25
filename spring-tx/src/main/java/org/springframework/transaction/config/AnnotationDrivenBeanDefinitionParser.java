@@ -63,7 +63,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 		registerTransactionalEventListenerFactory(parserContext);
 		String mode = element.getAttribute("mode");
 		if ("aspectj".equals(mode)) {
-			// mode="aspectj"
+			// mode="aspectj" 提供对 aspectj 方式进行事务切入的支持
 			registerTransactionAspect(element, parserContext);
 			if (ClassUtils.isPresent("javax.transaction.Transactional", getClass().getClassLoader())) {
 				registerJtaTransactionAspect(element, parserContext);
@@ -122,7 +122,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 			AopNamespaceUtils.registerAutoProxyCreatorIfNecessary(parserContext, element);
 
 			String txAdvisorBeanName = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME;
-			if (!parserContext.getRegistry().containsBeanDefinition(txAdvisorBeanName)) {
+			if (!parserContext.getRegistry().containsBeanDefinition(txAdvisorBeanName)) { // 标签只会解析一次
 				Object eleSource = parserContext.extractSource(element);
 
 				// Create the TransactionAttributeSource definition.
@@ -136,6 +136,10 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 				RootBeanDefinition interceptorDef = new RootBeanDefinition(TransactionInterceptor.class);
 				interceptorDef.setSource(eleSource);
 				interceptorDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+				/**
+				 * 当 <tx:annotation-driven/>标签在不指定 transaction-manager属性的时候，会默认寻找id固定名为 transationManager 的 bean 作为事务管理器
+				 * {@link TxNamespaceHandler#DEFAULT_TRANSACTION_MANAGER_BEAN_NAME}
+				 */
 				registerTransactionManager(element, interceptorDef);
 				interceptorDef.getPropertyValues().add("transactionAttributeSource", new RuntimeBeanReference(sourceName));
 				String interceptorName = parserContext.getReaderContext().registerWithGeneratedName(interceptorDef);

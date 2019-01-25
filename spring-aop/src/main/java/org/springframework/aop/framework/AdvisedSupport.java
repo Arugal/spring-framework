@@ -37,6 +37,7 @@ import org.springframework.aop.support.DefaultIntroductionAdvisor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.target.EmptyTargetSource;
 import org.springframework.aop.target.SingletonTargetSource;
+import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -470,6 +471,10 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 
 
 	/**
+	 * 得到根据{@link Advice} 信息组成的 chain, 根据 Method 和 Class 由 {@link org.springframework.aop.Pointcut} 过滤
+	 * {@link org.springframework.aop.framework.CglibAopProxy.DynamicAdvisedInterceptor#intercept(Object, Method, Object[], MethodProxy)}
+	 * {@link JdkDynamicAopProxy#invoke(Object, Method, Object[])}
+	 *
 	 * Determine a list of {@link org.aopalliance.intercept.MethodInterceptor} objects
 	 * for the given method, based on this configuration.
 	 * @param method the proxied method

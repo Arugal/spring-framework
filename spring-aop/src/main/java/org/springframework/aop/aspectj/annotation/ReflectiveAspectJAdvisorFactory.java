@@ -69,9 +69,13 @@ import org.springframework.util.comparator.InstanceComparator;
 @SuppressWarnings("serial")
 public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFactory implements Serializable {
 
+	// 对 AOP 调用链进行排序
 	private static final Comparator<Method> METHOD_COMPARATOR;
 
 	static {
+		/**
+		 * 先根据注解排序若注解排序相等，根据方法名称排序
+		 */
 		Comparator<Method> adviceKindComparator = new ConvertingComparator<>(
 				new InstanceComparator<>(
 						Around.class, Before.class, After.class, AfterReturning.class, AfterThrowing.class),
@@ -122,6 +126,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 				new LazySingletonAspectInstanceFactoryDecorator(aspectInstanceFactory);
 
 		List<Advisor> advisors = new ArrayList<>();
+		// 没有 Pointcut 注解的方法
 		for (Method method : getAdvisorMethods(aspectClass)) {
 			Advisor advisor = getAdvisor(method, lazySingletonAspectInstanceFactory, advisors.size(), aspectName);
 			if (advisor != null) {

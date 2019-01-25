@@ -86,6 +86,10 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	}
 
 
+	/**
+	 * 从 IOD 从其获取在类上注解了{@link org.aspectj.lang.annotation.Aspect} 的 bean
+	 * @return
+	 */
 	@Override
 	protected List<Advisor> findCandidateAdvisors() {
 		// Add all the Spring advisors found according to superclass rules.
